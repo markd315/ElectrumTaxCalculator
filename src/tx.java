@@ -1,6 +1,6 @@
 import java.util.Date;
 
-public class tx {
+public class TX {
 	private Date timestamp;
 	private double value;
 	public Date getTimestamp() {
