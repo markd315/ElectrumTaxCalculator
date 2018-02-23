@@ -15,15 +15,19 @@ import java.util.Scanner;
 public class Main {
 	// Three topline numbers to report: hobbyist mining income, deductible
 	// electrical cost, and capital gain.
-	// format is "5/30/2017 9:47"
+	// date format is "5/30/2017 9:47"
 	static DateFormat myFormat = new SimpleDateFormat("M/d/yyyy HH:mm");
 
 	public static void main(String args[]) throws ParseException, InterruptedException, IOException {
 		String fn = args[0];
-		String miningPercentageOfTime = args[1];
+		/*//TODO find a different way, maybe prompt for these?
+		 * String miningPercentageOfTime = args[1];
 		String miningStart = args[2];
 		String miningEnd = args[3];
-		String taxYear = args[4];
+		 * 
+		 */
+		String taxYear = args[1];
+		String startingBalance = args[2];//TODO use this!
 		Scanner fi = new Scanner(new File(fn));
 		List<TX> arr = new ArrayList<TX>();
 		String topline = fi.nextLine(); // Scrap the header line.
@@ -39,33 +43,36 @@ public class Main {
 		}
 		double miningRevenue = 0;
 		double balance = 0;
+		double capitalGain = 0;
 		for (TX tx : arr) { // Run calculation.
 			long unixTimestamp = tx.getTimestamp().getTime() / 1000; // seconds UNIX time from ms UNIX time.
-			String response = makeRequest(unixTimestamp);
 			// https://min-api.cryptocompare.com/data/histoday?fsym=BTC&tsym=USD&limit=1&aggregate=1&toTs=[insert]&extraParams=ElectrumTaxCalculator
-			Thread.sleep(100); // API limit is 15/sec
-			System.out.println(response);
 			//Response format:
 			//{"Response":"Success","Type":100,"Aggregated":false,"Data":[{"time":1496145600,"close":2289.96,"high":2307.07,"low":2279.17,"open":2300.73,"volumefrom":6024.7,"volumeto":13629703.54},{"time":1496149200,"close":2266.12,"high":2294.73,"low":2259.23,"open":2289.96,"volumefrom":7559.15,"volumeto":17102527.7}],"TimeTo":1496149200,"TimeFrom":1496145600,"FirstValueInArray":true,"ConversionType":{"type":"direct","conversionSymbol":""}}
 			//Let's use the closing price for our quote.
-			String[] responseBroken = response.split(",");// look for "close":2220.82
-			String closingPrice = responseBroken[11].substring(8); //strip static chars to get the value only.
-			double price = Double.parseDouble(closingPrice);
+			double price = getQuote(unixTimestamp);
 			if(tx.getValue() > 0 && tx.wasMined()) {
 				miningRevenue += price * (tx.getValue());
 			}
 			else if(tx.getValue() < 0){
 				double soldPercentage = (-1.0* tx.getValue()) / balance;
-				double soldAmount = (-1.0* tx.getValue()) * price;
-				//TODO
+				double usdBalance = price * balance;
+				//capital gain = (usdbalance - minedAmount) * soldPercentage
+				capitalGain+= (usdBalance-miningRevenue)*soldPercentage;
 			}
 			//Calculate capital gain on all sales.
 			//For any sale, look at the percentage of mining revenue being dumped and compare the price here.
 			balance += tx.getValue();//Always do this step.
-			
+			Thread.sleep(100); // API limit is 15/sec
 		}
 		//Then, factor in the capital gains of the ending balance.
-
+		Date yearEnd = toDate("12/31/" + taxYear + " 11:59");
+		long ye = yearEnd.getTime() / 1000;
+		double yearEndPrice = getQuote(ye);
+		double usdBalance = yearEndPrice * balance;
+		//capital gain = (usdbalance - minedAmount) * soldPercentage
+		capitalGain+= (usdBalance-miningRevenue);
+		//TODO not sure about this.
 	}
 
 	private static String makeRequest(long unixTimestamp) throws IOException {
@@ -103,5 +110,10 @@ public class Main {
 		Date ret = myFormat.parse(string);
 		return ret;
 	}
-
+	private static double getQuote(long unixTimestamp) throws IOException {
+		String response = makeRequest(unixTimestamp);
+		String[] responseBroken = response.split(",");// look for "close":2220.82
+		String closingPrice = responseBroken[11].substring(8); //strip static chars to get the value only.
+		return Double.parseDouble(closingPrice);
+	}
 }
