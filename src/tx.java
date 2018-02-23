@@ -21,6 +21,10 @@ public class TX {
 		this.timestamp = timestamp;
 		this.value = value;
 		this.wasMined = wasMined;
+		if(value < 0.0) {
+			//Mining transactions cannot be negative.
+			this.wasMined = false;
+		}
 	}
 	
 }
