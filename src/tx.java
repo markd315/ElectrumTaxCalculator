@@ -13,6 +13,12 @@ public class TX {
 	public double getValue() {
 		return value;
 	}
+	public boolean wasMined() {
+		return wasMined;
+	}
+	public void setWasMined(boolean wasMined) {
+		this.wasMined = wasMined;
+	}
 	public void setValue(double value) {
 		this.value = value;
 	}
