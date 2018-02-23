@@ -41,9 +41,11 @@ public class Main {
 			arr.add(newtx);
 
 		}
+		System.out.println("Finished parsing transaction log, making API calls.");
 		double miningRevenue = 0;
 		double balance = 0;
 		double capitalGain = 0;
+		double costBasis = 0;
 		for (TX tx : arr) { // Run calculation.
 			long unixTimestamp = tx.getTimestamp().getTime() / 1000; // seconds UNIX time from ms UNIX time.
 			// https://min-api.cryptocompare.com/data/histoday?fsym=BTC&tsym=USD&limit=1&aggregate=1&toTs=[insert]&extraParams=ElectrumTaxCalculator
@@ -51,31 +53,29 @@ public class Main {
 			//{"Response":"Success","Type":100,"Aggregated":false,"Data":[{"time":1496145600,"close":2289.96,"high":2307.07,"low":2279.17,"open":2300.73,"volumefrom":6024.7,"volumeto":13629703.54},{"time":1496149200,"close":2266.12,"high":2294.73,"low":2259.23,"open":2289.96,"volumefrom":7559.15,"volumeto":17102527.7}],"TimeTo":1496149200,"TimeFrom":1496145600,"FirstValueInArray":true,"ConversionType":{"type":"direct","conversionSymbol":""}}
 			//Let's use the closing price for our quote.
 			double price = getQuote(unixTimestamp);
-			if(tx.getValue() > 0 && tx.wasMined()) {
+			if(tx.wasMined()) {
 				miningRevenue += price * (tx.getValue());
 			}
-			else if(tx.getValue() < 0){
-				double soldPercentage = (-1.0* tx.getValue()) / balance;
-				double usdBalance = price * balance;
-				//capital gain = (usdbalance - minedAmount) * soldPercentage
-				capitalGain+= (usdBalance-miningRevenue)*soldPercentage;
+			if(tx.getValue() > 0) {
+				costBasis += price * (tx.getValue());
+			}
+			else if(tx.getValue() < 0){//On sales we calculate a gain or loss from the basis.
+				double avgCostBasis = costBasis / balance; //So like .5 bought@1000, .5 bought@2000 = basis of (500+1000)/1  = 1500 avg
+				//capital gain = (avgCostBasis - saleCost) * soldShares
+				capitalGain+= (avgCostBasis-price)*tx.getValue();
 			}
 			//Calculate capital gain on all sales.
 			//For any sale, look at the percentage of mining revenue being dumped and compare the price here.
 			balance += tx.getValue();//Always do this step.
 			Thread.sleep(100); // API limit is 15/sec
 		}
-		//Then, factor in the capital gains of the ending balance.
-		Date yearEnd = toDate("12/31/" + taxYear + " 11:59");
-		long ye = yearEnd.getTime() / 1000;
-		double yearEndPrice = getQuote(ye);
-		double usdBalance = yearEndPrice * balance;
-		//capital gain = (usdbalance - minedAmount) * soldPercentage
-		capitalGain+= (usdBalance-miningRevenue);
-		//TODO not sure about this.
+		System.out.println("Mining revenue: $" + miningRevenue);
+
+		System.out.println("Capital gain (loss shown negative): $" + capitalGain);
 	}
 
 	private static String makeRequest(long unixTimestamp) throws IOException {
+		System.out.println("Still working: takes time to talk to server.");
 		StringBuilder result = new StringBuilder();
 		String urlToRead = "https://min-api.cryptocompare.com/data/histohour?fsym=BTC&tsym=USD&limit=1&toTs=" + unixTimestamp + "&extraParams=ElectrumTaxCalculator";
 		URL url = new URL(urlToRead);
