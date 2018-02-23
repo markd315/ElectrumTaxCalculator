@@ -22,8 +22,9 @@ public class Main {
 				Date date = toDate(parts[4]);
 				boolean wasMined = wasMined(parts[5]);
 				TX newtx = new TX(date, val, wasMined);
+				arr.add(newtx);
 			}
-			
+			//Run calculation.
 	}
 
 	private static boolean wasMined(String string) {
