@@ -1,6 +1,8 @@
 # ElectrumTaxCalculator
 As a cryptocurrency miner, you must pay taxes on cost-basis sales for capital gains AND for mining revenue.
+
 Generates two reportable tax figures from your Electrum-exported transaction history by pinging API's for historical price quotes.
+Other figures you may want to calculate seperately are the capital investment in your GPUs/ASICs and the electricity cost you can deduct.
 
 THIS PROGRAM TAKES 2 COMMAND-LINE ARGUMENTS:
 
