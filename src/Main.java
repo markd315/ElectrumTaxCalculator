@@ -23,6 +23,14 @@ public class Main {
 		Scanner fi = new Scanner(new File(fn));
 		List<TX> arr = new ArrayList<TX>();
 		String topline = fi.nextLine(); // Scrap the header line.
+		if(topline.split(",").length == 5) {
+			System.err.println("Add a column to your Excel table to indicate whether the input was part of a mining payment!");
+			return;
+		}
+		if(topline.split(",").length != 6) {
+			System.err.println("Unknown formatting error, please follow the standard Electrum export format!");
+			return;
+		}
 		int startingBalance = 0;
 		while (fi.hasNextLine()) {// parsing
 			String[] parts = fi.nextLine().split(",");
