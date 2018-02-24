@@ -19,14 +19,24 @@ public class Main {
 
 	public static void main(String args[]) throws ParseException, InterruptedException, IOException {
 		String fn = args[0];
-		String startingBalance = args[1];//TODO use this!
+		int fileYear = Integer.parseInt(args[1]);
 		Scanner fi = new Scanner(new File(fn));
 		List<TX> arr = new ArrayList<TX>();
 		String topline = fi.nextLine(); // Scrap the header line.
+		int startingBalance = 0;
 		while (fi.hasNextLine()) {// parsing
 			String[] parts = fi.nextLine().split(",");
 			// format: 0transaction_hash,1label,2confirmations,3value,4timestamp,5mining
 			double val = Double.parseDouble(parts[3]);
+			int txYear = Integer.parseInt(parts[4].split("/")[2].substring(0,4));//Grabs just the year.
+			if(txYear > fileYear) {//We disregard it, as it is in the future. Also warn console.
+				System.err.println("Warning: ledger contains transactions from future years.");
+				continue;
+			}
+			if(txYear < fileYear) {
+				startingBalance +=val;
+				continue;
+			}
 			Date date = toDate(parts[4]);
 			boolean wasMined = wasMined(parts[5]);
 			TX newtx = new TX(date, val, wasMined);
@@ -35,7 +45,7 @@ public class Main {
 		}
 		System.out.println("Finished parsing transaction log, making API calls.");
 		double miningRevenue = 0;
-		double balance = Double.parseDouble(startingBalance);
+		double balance = startingBalance;
 		double capitalGain = 0;
 		double costBasis = 0;
 		for (TX tx : arr) { // Run calculation.
@@ -62,7 +72,7 @@ public class Main {
 			Thread.sleep(100); // API limit is 15/sec
 		}
 		System.out.println("Mining revenue: $" + miningRevenue);
-
+		System.out.println("Cost basis for capital gains: $" + costBasis/balance);
 		System.out.println("Capital gain (loss shown negative): $" + capitalGain);
 	}
 
@@ -109,3 +119,9 @@ public class Main {
 		return Double.parseDouble(closingPrice);
 	}
 }
+
+//TODO remove FOR ETH:
+//395.4223 avg cost basis
+//sale 1.95@531.31 = 264.98 gain
+//sale .35@1203 = 282.76 gain
+//547.74 ETH capital gain.
