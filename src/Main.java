@@ -13,21 +13,13 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Main {
-	// Three topline numbers to report: hobbyist mining income, deductible
-	// electrical cost, and capital gain.
+	// Three topline numbers to report: hobbyist mining income, and capital gain.
 	// date format is "5/30/2017 9:47"
 	static DateFormat myFormat = new SimpleDateFormat("M/d/yyyy HH:mm");
 
 	public static void main(String args[]) throws ParseException, InterruptedException, IOException {
 		String fn = args[0];
-		/*//TODO find a different way, maybe prompt for these?
-		 * String miningPercentageOfTime = args[1];
-		String miningStart = args[2];
-		String miningEnd = args[3];
-		 * 
-		 */
-		String taxYear = args[1];
-		String startingBalance = args[2];//TODO use this!
+		String startingBalance = args[1];//TODO use this!
 		Scanner fi = new Scanner(new File(fn));
 		List<TX> arr = new ArrayList<TX>();
 		String topline = fi.nextLine(); // Scrap the header line.
@@ -43,7 +35,7 @@ public class Main {
 		}
 		System.out.println("Finished parsing transaction log, making API calls.");
 		double miningRevenue = 0;
-		double balance = 0;
+		double balance = Double.parseDouble(startingBalance);
 		double capitalGain = 0;
 		double costBasis = 0;
 		for (TX tx : arr) { // Run calculation.
