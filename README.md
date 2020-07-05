@@ -1,4 +1,9 @@
 # ElectrumTaxCalculator
+
+**I no longer recommend Electrum as a cryptocurrency wallet, [see why](https://github.com/spesmilo/electrum/issues/5183).**
+
+**If you choose to use it anyway, be careful to use version 3.3.3 or higher (beware the version 4.0.0 scam!) and do not follow any auto-upgrade links.**
+
 As a cryptocurrency miner, you must pay taxes on cost-basis sales for capital gains AND for mining revenue.
 
 Generates two reportable tax figures from your Electrum-exported transaction history by pinging API's for historical price quotes.
